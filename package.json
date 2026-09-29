@@ -1,0 +1,15 @@
+{
+  "name": "consorcio-lab",
+  "version": "2.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Simulador de consórcio sem cadastro, com planos no navegador e índices publicados",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch server.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

@@ -1,0 +1,47 @@
+CONSÓRCIO LAB 2 - DIRETO NO SIMULADOR, SEM LOGIN
+
+PRIMEIRO USO
+
+1. Instale Node.js 24 LTS se ainda não tiver.
+2. Extraia o ZIP inteiro e entre na pasta consorcio-lab.
+3. Dê dois cliques em INICIAR-WINDOWS.cmd.
+4. Abra http://localhost:3000 no navegador.
+
+Você já entra no simulador. Não há cadastro, login ou senha.
+Mantenha a janela do servidor aberta enquanto usar.
+
+ATUALIZAR A VERSÃO ANTIGA
+
+1. Se quiser trazer planos salvos na versão antiga, abra cada plano nela
+   e baixe seus dados completos em JSON ANTES de atualizar.
+2. Pare o servidor antigo com Ctrl+C.
+3. Faça uma cópia de segurança da pasta antiga inteira.
+4. Extraia o novo ZIP em outra pasta.
+5. Copie a pasta public INTEIRA e o arquivo server.mjs da nova versão
+   para a pasta antiga. Aceite substituir os arquivos de mesmo nome.
+   O novo public/storage.js precisa estar presente.
+6. Preserve a pasta data e o arquivo .env antigos.
+7. Inicie de novo pelo INICIAR-WINDOWS.cmd (ou npm.cmd start).
+8. Abra http://localhost:3000 e pressione Ctrl+F5.
+9. Use Abrir arquivo para abrir os JSONs que baixou antes da atualização.
+
+O banco antigo de contas não é apagado, aberto ou publicado por esta versão.
+Ele não é convertido automaticamente em planos do navegador.
+Se você modificou o código anterior, compare suas alterações antes de copiar.
+
+COMO GUARDAR PLANOS AGORA
+
+Guardar aqui: salva só neste navegador e neste endereço do site.
+Planos guardados: mostra essas cópias. Limite de 50 planos.
+Baixar arquivo: cria um JSON para guardar ou levar a outro aparelho.
+Abrir arquivo: abre o JSON e refaz os cálculos.
+
+Pessoas que usam o mesmo perfil do navegador podem ver os planos locais.
+Se limpar os dados do navegador, as cópias locais serão apagadas.
+Baixe o arquivo para ter uma cópia fora dele.
+
+SE APARECER ERRO DE PACKAGE.JSON
+
+O terminal está na pasta errada. Abra no VS Code a pasta consorcio-lab
+que contém package.json, e depois abra um NOVO terminal.
+Ou use INICIAR-WINDOWS.cmd, que já entra na pasta correta.

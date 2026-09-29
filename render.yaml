@@ -1,0 +1,17 @@
+# Configuração do Render para este simulador. Não cria banco de clientes.
+services:
+  - type: web
+    name: consorcio-lab
+    runtime: node
+    plan: free
+    buildCommand: npm test
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: "0.0.0.0"
