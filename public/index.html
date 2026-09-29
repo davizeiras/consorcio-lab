@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b101b"><title>Consórcio Lab · Seu plano, passo a passo</title>
+  <link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Ir para o simulador</a>
+<div id="app-view">
+  <header class="app-header"><div class="header-inner">
+    <a class="brand" href="/"><img src="/favicon.svg" width="34" height="34" alt=""><span>Consórcio<span class="brand-light">Lab</span></span></a>
+    <nav aria-label="Simulador"><button id="open-saved" class="text-button">Planos guardados</button><button id="open-import" class="text-button">Abrir arquivo</button><button id="open-rules" class="text-button">Me explique</button></nav>
+    <span class="access-badge">Sem cadastro</span>
+  </div></header>
+  <main id="main-content" class="workspace">
+    <div class="page-heading"><div><div class="eyebrow">DESCUBRA COMO FICARIA O SEU PLANO</div><h1>Simule seu consórcio.</h1><p>Escolha seu objetivo, informe o valor e veja uma estimativa.</p></div><button id="reset" class="button secondary">＋ Nova simulação</button></div>
+    <nav class="stepper" aria-label="Etapas da simulação"><ol>
+      <li><button type="button" data-step="0" aria-current="step"><span class="step-number">1</span><span>Objetivo</span></button></li>
+      <li><button type="button" data-step="1" disabled><span class="step-number">2</span><span>Valor</span></button></li>
+      <li><button type="button" data-step="2" disabled><span class="step-number">3</span><span>Quando usar</span></button></li>
+      <li><button type="button" data-step="3" disabled><span class="step-number">4</span><span>Resultado</span></button></li>
+    </ol></nav>
+    <div id="calculation-error" class="error-box" role="alert" hidden></div>
+    <div id="journey-layout" class="journey-layout">
+      <div class="journey-main">
+        <form id="config-form" novalidate>
+          <section class="wizard-panel card" data-panel="0" aria-labelledby="step-title-0">
+            <div class="eyebrow">PASSO 1 DE 3</div><h2 id="step-title-0" tabindex="-1">O que você quer fazer?</h2><p class="intro">Escolha uma opção. Você pode mudar depois.</p>
+            <p class="simple-definition"><strong>Crédito</strong> é o valor contratado para realizar seu plano.</p>
+            <fieldset class="choice-group"><legend class="sr-only">O que fazer com o crédito</legend><div class="goal-choices">
+              <label class="choice goal-choice"><input type="radio" name="scenario" value="hold"><span class="choice-icon" aria-hidden="true">↗</span><span><strong>Deixar o crédito rendendo</strong><small>Ver quanto o crédito pode render depois de liberado.</small></span><span class="choice-check" aria-hidden="true"></span></label>
+              <label class="choice goal-choice"><input type="radio" name="scenario" value="sale"><span class="choice-icon" aria-hidden="true">⇄</span><span><strong>Vender a carta contemplada</strong><small>Ver quanto receberia pela venda e ao investir esse dinheiro.</small></span><span class="choice-check" aria-hidden="true"></span></label>
+              <label id="property-choice" class="choice goal-choice"><input type="radio" name="scenario" value="property"><span class="choice-icon" aria-hidden="true">⌂</span><span><strong>Usar o crédito no imóvel</strong><small>Comprar, construir, reformar ou quitar um financiamento.</small></span><span class="choice-check" aria-hidden="true"></span></label>
+            </div></fieldset>
+            <p id="goal-note" class="info-note"></p><details id="segment-options" class="advanced"><summary>Tipo de consórcio: <span id="segment-current">Imóvel</span></summary><div class="details-content"><div id="segment-field"></div></div></details>
+          </section>
+          <section class="wizard-panel card" data-panel="1" aria-labelledby="step-title-1" hidden>
+            <div class="eyebrow">PASSO 2 DE 3</div><h2 id="step-title-1" tabindex="-1">De quanto você precisa?</h2><p class="intro">Digite o valor do crédito e o prazo para pagar.</p>
+            <div id="amount-fields"></div><p id="amount-help" class="field-help"></p>
+            <fieldset class="choice-group"><legend>Como você prefere pagar?</legend><div class="plan-choices">
+              <label class="choice plan-choice"><input type="radio" name="plan" value="reduced"><span><strong>Começar com menos</strong><small>Parcela reduzida: começa menor e muda quando o crédito é liberado.</small></span><span class="choice-check" aria-hidden="true"></span></label>
+              <label class="choice plan-choice"><input type="radio" name="plan" value="linear"><span><strong>Pagar a parcela integral</strong><small>Parcela integral: paga o crédito todo ao longo do prazo. Pode ter reajustes.</small></span><span class="choice-check" aria-hidden="true"></span></label>
+            </div></fieldset>
+            <div class="installment-preview"><div><span>Você começa pagando, aproximadamente</span><strong id="first-preview">—</strong><small>por mês</small></div><p id="first-preview-note"></p></div>
+            <p id="contract-summary" class="field-help"></p><details id="contract-options" class="advanced"><summary><span>Alterar taxas, seguro ou reajuste<small>Abra para usar as condições do seu contrato</small></span></summary><div class="details-content">
+              <h3>Taxas e seguro</h3><div id="fees-fields"></div>
+              <h3>Reajuste ao longo do tempo</h3><p class="field-help">O reajuste pode aumentar as parcelas. O INCC é divulgado por mês; para o futuro, usamos a estimativa que você informar.</p><div id="index-fields"></div>
+              <div class="index-banner"><div><strong id="index-title">INCC-M</strong><span id="index-status">Consulta pendente</span></div><div><strong id="index-value">—</strong><span id="index-date">Divulgação mensal</span></div><button id="refresh-index" type="button" class="button secondary small">Atualizar índice</button></div>
+              <label id="manual-upload-label" hidden>Importar histórico de reajuste<input id="manual-upload" type="file" accept=".csv,text/csv"><small>CSV: competencia;percentual. Exemplo: 2025-01;0,71.</small></label>
+              <h3>Período da simulação</h3><div id="period-fields"></div>
+            </div></details>
+          </section>
+          <section class="wizard-panel card" data-panel="2" aria-labelledby="step-title-2" hidden>
+            <div class="eyebrow">PASSO 3 DE 3</div><h2 id="step-title-2" tabindex="-1">Quando quer simular a liberação?</h2><p class="intro">A liberação do crédito se chama contemplação. Escolha um mês apenas para testar o seu plano.</p>
+            <div id="contemplation-fields"></div><p id="contemplation-method" class="info-note"></p>
+            <details id="bid-options" class="advanced"><summary>Quer simular um lance? <small>Opcional</small></summary><div class="details-content"><p class="field-help">Lance é uma oferta de pagamento para tentar antecipar a liberação do crédito. Ele pode sair do seu bolso, da carta, ou dos dois.</p><div id="bid-method-field"></div><div id="bid-fields" hidden></div>
+            <details id="loyalty-fields" class="advanced" hidden><summary>Regras do lance fidelidade</summary><div id="loyalty-inputs" class="details-content"></div></details></div></details>
+            <div class="section-divider"></div><h3 id="scenario-heading">Depois da contemplação</h3>
+            <div id="hold-settings"></div><div id="sale-settings" hidden></div><div id="property-settings" hidden></div><p id="operation-preview" class="operation-preview" hidden></p>
+            <details id="operation-options" class="advanced"><summary><span>Outras opções deste plano<small>Datas, custos e impostos</small></span></summary><div class="details-content"><div id="extra-return-fields"></div><div id="sale-extra-fields" hidden></div><div id="property-extra-fields" hidden></div><div id="tax-fields"></div></div></details>
+          </section>
+        </form>
+        <div id="timing-note" class="info-note" role="status" hidden></div>
+        <div id="wizard-actions" class="wizard-actions"><button id="previous-step" class="button secondary" hidden>← Voltar</button><span id="step-progress">Passo 1 de 3</span><button id="next-step" class="button primary">Continuar →</button></div>
+      </div>
+      <aside id="plan-preview" class="plan-preview" aria-label="Resumo das suas escolhas">
+        <div class="eyebrow">SEU PLANO, ATÉ AQUI</div><h2>Seu plano em poucas palavras.</h2><dl><div><dt>Seu objetivo</dt><dd id="preview-goal">—</dd></div><div><dt>Crédito escolhido</dt><dd id="preview-credit">—</dd></div><div><dt>Tempo para pagar</dt><dd id="preview-term">—</dd></div><div><dt>Tipo de parcela</dt><dd id="preview-plan">—</dd></div></dl><p>Você pode voltar e mudar qualquer resposta.</p>
+      </aside>
+    </div>
+    <section id="results-panel" aria-labelledby="step-title-3" hidden>
+      <div class="result-heading"><div><div class="eyebrow">SUAS ESCOLHAS, EM NÚMEROS</div><h2 id="step-title-3" tabindex="-1">Veja como ficaria.</h2><p id="plan-sentence"></p></div><button class="button secondary" data-edit="1">Ajustar respostas</button></div>
+      <div id="essential-notes" class="essential-notes"></div>
+      <div id="result-content">
+        <section class="card payment-card" aria-label="Suas parcelas"><div><span>Primeira parcela</span><strong id="payment-first">—</strong><small id="payment-first-note"></small></div><span class="payment-arrow" aria-hidden="true">→</span><div><span id="payment-after-label">Após a contemplação</span><strong id="payment-after">—</strong><small id="payment-after-note"></small></div><button class="text-button" data-edit="1">Ajustar parcela</button></section>
+        <section class="card timeline-card" aria-label="Escolha o mês do resultado">
+          <div class="section-title"><div><div class="eyebrow">ARRASTE PARA VER OUTRO MOMENTO</div><h3 id="time-label">Mês 220</h3><span id="time-date"></span></div><span id="phase-label" class="phase-pill"></span></div>
+          <label class="sr-only" for="timeline">Mês para visualizar os valores</label><input id="timeline" type="range" min="1" max="220" value="220"><div class="timeline-labels"><span>Início</span><span id="contemplation-marker"></span><span id="end-marker"></span></div>
+          <div class="milestones"><button data-jump="start">Primeiro mês</button><button data-jump="contemplation">Na contemplação</button><button id="jump-event" data-jump="event" hidden>No uso do crédito</button><button data-jump="end">Fim da simulação</button></div>
+        </section>
+        <section class="metrics" aria-label="Valores no mês escolhido">
+          <div class="metric blue"><span id="asset-label">Valor estimado</span><strong id="metric-assets">—</strong><small id="metric-assets-note"></small></div>
+          <div class="metric"><span>Você já teria pago</span><strong id="metric-paid">—</strong><small>Parcelas e valores pagos do seu bolso até este mês.</small></div>
+          <div class="metric"><span>Ainda faltaria pagar</span><strong id="metric-debt">—</strong><small>Saldo e taxas restantes. Não inclui reajustes e seguros futuros.</small></div>
+        </section>
+        <section class="result-explained"><div><span>Diferença estimada a seu favor ou contra</span><strong id="metric-result">—</strong><small id="metric-roi"></small></div><div><p id="result-explanation"></p><small>Comparamos o valor estimado com tudo o que você pagou e ainda deve. É uma estimativa, sem descontar a inflação.</small></div></section>
+        <details class="card disclosure"><summary>Entender o plano, passo a passo</summary><div class="details-content"><button class="text-button" data-edit="2">Mudar a data simulada</button><ol id="plan-story" class="plan-story"></ol><div id="event-details" class="event-details" hidden></div></div></details>
+        <section class="card save-card"><div><h3>Quer guardar este plano?</h3><p id="save-status" role="status">Guarde neste navegador ou baixe um arquivo para abrir depois.</p></div><div class="save-fields"><label>Nome do plano <small>Opcional</small><input form="config-form" name="name" maxlength="100" placeholder="Ex.: meu primeiro imóvel"></label><div class="save-buttons"><button id="save" class="button primary">Guardar aqui</button><button id="download-plan" class="button secondary">Baixar arquivo</button></div></div><p class="storage-note">“Guardar aqui” salva apenas neste navegador. Se limpar os dados dele, os planos serão apagados. Baixe um arquivo para ter uma cópia.</p></section>
+        <h3 class="details-heading">Quer olhar mais de perto?</h3><p class="details-intro">Abra só o que quiser conferir.</p>
+        <details class="card disclosure" id="chart-details"><summary>Evolução dos valores</summary><div class="details-content"><div class="legend"><span>Valor estimado</span><span>Total pago</span><span>Ainda falta pagar</span></div><div id="chart" class="chart" role="img" aria-label="Evolução dos valores"></div><p class="field-help">Antes da contemplação, o valor representa um direito ao crédito, ainda indisponível. Os valores completos estão na tabela mensal.</p></div></details>
+        <details class="card disclosure"><summary>O que compõe a parcela e o resultado</summary><div class="details-content"><p id="detail-month"></p><div id="breakdown" class="breakdown"></div></div></details>
+        <details class="card disclosure"><summary>Comparar parcela integral e reduzida</summary><div class="details-content"><p>Veja como a mesma simulação muda com outro tipo de parcela.</p><button id="compare" class="button secondary">Comparar as duas opções</button><div id="comparison" hidden></div></div></details>
+        <details class="card disclosure"><summary>Valores mês a mês</summary><div class="details-content"><button id="export-csv" class="button secondary">Baixar tabela (CSV)</button><div class="table-scroll"><table><caption class="sr-only">Evolução mensal da simulação</caption><thead><tr><th scope="col">Mês</th><th scope="col">Parcela</th><th scope="col">Falta pagar</th><th scope="col">Valor estimado</th><th scope="col">Resultado</th><th scope="col">Reajuste / origem</th></tr></thead><tbody id="monthly-body"></tbody></table></div><div class="pagination"><button id="prev-page" class="text-button">← Anterior</button><span id="page-label"></span><button id="next-page" class="text-button">Próxima →</button></div></div></details>
+        <details class="card disclosure"><summary>Hipóteses usadas nesta simulação</summary><div class="details-content"><p id="result-index-note"></p><div id="assumption-values" class="breakdown"></div><ul id="warnings"></ul><button id="export-json" class="button secondary">Baixar dados completos (JSON)</button></div></details>
+      </div>
+    </section>
+    <footer class="page-footer"><span>Consórcio Lab</span><span>Simulação baseada nas suas escolhas. Não garante contemplação, venda ou rendimento.</span></footer>
+  </main>
+</div>
+<dialog id="saved-dialog" aria-labelledby="saved-title"><div class="dialog-heading"><h2 id="saved-title">Planos guardados aqui</h2><button class="icon-button" data-close="saved-dialog" aria-label="Fechar">×</button></div><p class="field-help">Estes planos ficam neste navegador. Em um aparelho compartilhado, outras pessoas que usem o mesmo navegador poderão vê-los.</p><div id="saved-list"></div></dialog>
+<dialog id="rules-dialog" aria-labelledby="rules-title"><div class="dialog-heading"><h2 id="rules-title">Entenda sem complicação</h2><button class="icon-button" data-close="rules-dialog" aria-label="Fechar">×</button></div><div class="rules-content">
+  <h3>1. Você escolhe um crédito</h3><p>É o valor que deseja contratar. A parcela inclui uma parte desse crédito, a taxa de administração e o fundo de reserva. O seguro, quando informado, é acrescentado à parte.</p>
+  <h3>2. Você simula a contemplação</h3><p>É quando o crédito fica disponível conforme as regras da administradora. Pode ocorrer por sorteio ou lance. Aqui, você escolhe um mês para testar um cenário; isso não é uma previsão.</p>
+  <h3>3. Você escolhe o que fazer depois</h3><p>Usar no imóvel, manter o crédito aplicado ou vender a carta contemplada. Cada opção mostra o total pago, o valor estimado e a dívida que ainda resta.</p>
+  <h3>Por que a parcela pode aumentar?</h3><p>A parcela reduzida cobra uma parte menor do crédito antes da contemplação. Depois, o saldo é dividido pelos meses restantes. O reajuste também pode aumentar a parcela integral ou reduzida.</p>
+  <h3>O que é INCC?</h3><p>É um índice ligado aos custos da construção. A consulta traz valores mensais publicados. Para meses futuros ou sem histórico, usamos o reajuste estimado que você informar. Confirme qual índice seu contrato utiliza.</p>
+  <details class="advanced"><summary>Entender as fórmulas e as regras</summary><div class="details-content">
+    <p>Parcela integral inicial = (crédito + administração + reserva) ÷ prazo. Reduzida inicial = (50% do crédito + administração integral + reserva integral) ÷ prazo. Os padrões são 24% de administração, 0,2% de reserva e 220 meses.</p>
+    <p>O seguro mensal informado entra a partir da contemplação, inclusive, ou antes quando selecionado. Em branco, o custo fica fora dos totais. A parcela reduzida vale até o mês da contemplação; o restante do principal é dividido pelos meses seguintes. No último mês do contrato, todo saldo remanescente vence.</p>
+    <p>O lance reduz o saldo do crédito e mantém o prazo. A parte retirada da carta também diminui o crédito disponível. A parcela do mês é paga antes do lance.</p>
+    <p>Neste modelo, o índice corrige só o principal ainda não pago. Administração, reserva e seguro ficam fixos. No reajuste anual, os fatores mensais acumulados são aplicados nos meses 13, 25 e assim por diante. O crédito de referência é corrigido até a contemplação; depois, segue o rendimento informado.</p>
+    <p>Taxa mensal equivalente = (1 + taxa anual)^(1/12) − 1. O rendimento começa no mês seguinte ao recebimento. O crédito aplicado permanece vinculado à administradora.</p>
+    <p>Na venda, recebimento = percentual negociado × crédito disponível + reembolso adicional − custos − imposto efetivo sobre o ganho positivo. A simulação considera a transferência aprovada das obrigações ao comprador, que assume as parcelas restantes.</p>
+    <p>Resultado = valor estimado após os descontos informados − dívida restante − total pago por você. O percentual sobre o total pago não é anualizado. Os resultados não descontam inflação, nem apuram automaticamente os impostos devidos. Não há devolução automática de reserva neste modelo.</p>
+    <p>As taxas fixas, as garantias e as regras de correção, seguro e lance devem corresponder ao contrato. Fonte conceitual: <a href="https://portalibre.fgv.br/estudos-e-pesquisas/indices-de-precos/incc" target="_blank" rel="noopener noreferrer">FGV IBRE — INCC</a>. Histórico consultado no SGS do Banco Central.</p>
+  </div></details>
+</div></dialog>
+<input id="import-plan" type="file" accept=".json,application/json" aria-label="Abrir arquivo de simulação" hidden>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><p class="error-box">Ative o JavaScript no navegador para usar o simulador.</p></noscript>
+</body>
+</html>
