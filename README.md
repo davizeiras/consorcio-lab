@@ -2,7 +2,7 @@
 
 Abra o endereço e comece a simular. Esta versão não pede nome, e-mail, senha ou cadastro.
 
-A versão 2.1.0 aplica a identidade Iran Solutions em vermelho, branco e preto. Mantém a compatibilidade com os planos e arquivos do Consórcio Lab.
+A versão 2.2.0 mantém apenas dois objetivos: **Render** e **Vender**, com a identidade Iran Solutions em vermelho, branco e preto. O resumo lateral, a comparação de parcelas e as explicações duplicadas foram removidos. Taxas e detalhes do cálculo ficam em uma única seção recolhida.
 
 **Para colocar na internet:** siga [PUBLICAR-GRATIS.md](PUBLICAR-GRATIS.md). A versão 2.0.1 inclui a configuração do Render Free e detecta o endereço público automaticamente. Ainda é necessário criar o serviço na sua conta.
 
@@ -23,7 +23,7 @@ Não precisa executar `npm install`. Se o terminal mostrar `ENOENT package.json`
 
 ## O que o cliente vê
 
-1. **Objetivo:** usar no imóvel, deixar o crédito rendendo ou vender a carta contemplada.
+1. **Objetivo:** Render (deixar o crédito aplicado) ou Vender (vender a carta contemplada e investir o valor recebido).
 2. **Valor:** digitar o crédito, escolher um valor sugerido e definir o prazo e o tipo de parcela.
 3. **Quando usar:** escolher qualquer ano dentro do prazo do contrato, o último período incompleto ou um mês personalizado. Lances ficam em uma opção separada.
 4. **Resultado:** parcelas, valor estimado, total pago, saldo restante, ROI no período e lance total, dividido entre recursos próprios e carta. Antes da contemplação, o lance aparece como previsto. Uma frase explica se a diferença fica a favor ou contra o cliente.
@@ -32,16 +32,16 @@ O ROI usa o resultado estimado (valor estimado menos dívida e total pago) divid
 
 Em **Evolução dos valores**, passe o mouse, toque no gráfico ou use o controle de mês com as setas do teclado para consultar os valores exatos. **Valores mês a mês** inclui o valor pago acumulado, também disponível no CSV.
 
-A tela chama contemplação de **liberação do crédito** e explica o termo. A compra mostra quanto falta completar do próprio bolso; a venda mostra o recebimento líquido estimado. A linha do tempo permite olhar outro mês.
+A tela chama contemplação de **liberação do crédito** e explica o termo. A venda mostra o recebimento líquido estimado. A linha do tempo permite olhar outro mês.
 
-Seguro, taxas, INCC, impostos, datas de venda/uso e regras de lance continuam disponíveis nas opções do plano. Gráfico, comparação das parcelas, demonstrativo, hipóteses e exportações ficam nos detalhes do resultado.
+Seguro, taxas, INCC, impostos, data da venda e regras de lance continuam disponíveis nas opções do plano. Gráfico, tabela mensal, taxas e salvamento ficam nos detalhes do resultado.
 
 ## Guardar e abrir planos
 
-- **Guardar aqui:** salva neste navegador e neste endereço do site, usando `localStorage`. Limite: 50 planos. O servidor não guarda uma lista de simulações.
+- **Guardar simulação → Guardar aqui:** salva neste navegador e neste endereço do site, usando `localStorage`. Limite: 50 planos. O servidor não guarda uma lista de simulações.
 - **Planos guardados:** abre ou exclui uma dessas cópias. Salvar de novo cria outra cópia.
 - **Baixar arquivo:** gera um JSON com as escolhas e o histórico de índices. Guarde-o como cópia ou leve para outro aparelho.
-- **Abrir arquivo:** importa o JSON, valida os dados e refaz os cálculos. Também aceita o JSON exportado pela versão anterior.
+- **Abrir arquivo:** importa o JSON, valida os dados e refaz os cálculos. Também aceita planos de rendimento e venda exportados pela versão anterior. Planos imobiliários antigos são preservados, mas não são convertidos nem abertos na interface atual.
 - **Valores mês a mês → Baixar tabela:** exporta o demonstrativo em CSV.
 
 Em um aparelho compartilhado, as pessoas que usam o mesmo perfil do navegador podem ver os planos guardados ali. Limpar os dados do navegador remove essas cópias. Outro navegador, perfil, endereço ou porta não acessa automaticamente os mesmos planos. Se o navegador bloquear o armazenamento ou não houver espaço, a tela informa a falha e permite baixar o arquivo.
@@ -108,7 +108,7 @@ Em redes que exigem proxy, Node 24.5 ou posterior aceita `NODE_USE_ENV_PROXY=1` 
 npm.cmd test
 ```
 
-A suíte tem **46 testes**, incluindo cálculos, todas as opções de anos, seleção do mês no gráfico, entrada direta sem conta, ausência de rotas que exponham os planos antigos, armazenamento local, importação de arquivos, falhas de armazenamento e inicialização em produção com o endereço fornecido pelo Render.
+A suíte tem **47 testes**, incluindo cálculos, os dois objetivos atuais, preservação dos planos imobiliários antigos, todas as opções de anos, seleção do mês no gráfico, entrada direta sem conta, ausência de rotas que exponham os planos antigos, armazenamento local, importação de arquivos, falhas de armazenamento e inicialização em produção com o endereço fornecido pelo Render.
 
 Exemplo sem índices, rendimento ou seguro: crédito R$ 220.000, 220 meses, administração 24%, reserva 0,2%, liberação no mês 60. Parcela integral inicial: **R$ 1.242,00**. Reduzida inicial: **R$ 742,00**. Reduzida no mês 61: **R$ 1.429,50**. Total de parcelas: **R$ 273.240,00** em ambos os planos.
 
