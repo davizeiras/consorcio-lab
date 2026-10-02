@@ -1,8 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DEFAULTS,simulate} from '../public/engine.js';
-import {duration,firstPayment,syncChoices,assetCopy,afterPayment} from '../public/journey.js';
+import {duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt} from '../public/journey.js';
 const config=overrides=>({...DEFAULTS,credit:220000,indexVariant:'manual',forecastAnnual:0,insuranceMonthly:0,creditAnnualReturn:0,cashAnnualReturn:0,...overrides});
+
+test('todos os anos do contrato são selecionáveis, incluindo o último período incompleto',()=>{
+ const options=contemplationOptions(220);
+ assert.deepEqual(options.map(o=>o.month),[12,24,36,48,60,72,84,96,108,120,132,144,156,168,180,192,204,216,220]);
+ assert.match(options.at(-1).label,/18 anos e 4 meses/);
+ assert.equal(contemplationOptions(480).length,40);
+ assert.deepEqual(contemplationOptions(6).map(o=>o.month),[6]);
+ for(const invalid of [null,0,2.5,481])assert.deepEqual(contemplationOptions(invalid),[]);
+ const old=config({scenario:'sale'}),chosen=syncChoices({...old,contemplationMonth:216},old,'contemplationMonth').config;
+ assert.equal(chosen.saleMonth,216);assert.doesNotThrow(()=>simulate(chosen));
+});
+test('a posição no gráfico consulta o mês mais próximo e respeita os limites',()=>{
+ assert.equal(chartMonthAt(0,220),1);assert.equal(chartMonthAt(1,220),220);
+ assert.equal(chartMonthAt(59/219,220),60);assert.equal(chartMonthAt(.5,3),2);
+ assert.equal(chartMonthAt(-.2,220),1);assert.equal(chartMonthAt(1.2,220),220);
+});
 
 test('o resumo traduz o prazo sem arredondar os meses',()=>{
  assert.equal(duration(220),'18 anos e 4 meses');assert.equal(duration(13),'1 ano e 1 mês');assert.equal(duration(24),'2 anos');assert.equal(duration(null),'Informe o prazo');
