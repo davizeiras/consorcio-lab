@@ -1,6 +1,8 @@
-# Consórcio Lab — versão 2, sem login
+# Iran Solutions — simulador de consórcio, sem login
 
 Abra o endereço e comece a simular. Esta versão não pede nome, e-mail, senha ou cadastro.
+
+A versão 2.1.0 aplica a identidade Iran Solutions em vermelho, branco e preto. Mantém a compatibilidade com os planos e arquivos do Consórcio Lab.
 
 **Para colocar na internet:** siga [PUBLICAR-GRATIS.md](PUBLICAR-GRATIS.md). A versão 2.0.1 inclui a configuração do Render Free e detecta o endereço público automaticamente. Ainda é necessário criar o serviço na sua conta.
 
@@ -23,8 +25,12 @@ Não precisa executar `npm install`. Se o terminal mostrar `ENOENT package.json`
 
 1. **Objetivo:** usar no imóvel, deixar o crédito rendendo ou vender a carta contemplada.
 2. **Valor:** digitar o crédito, escolher um valor sugerido e definir o prazo e o tipo de parcela.
-3. **Quando usar:** testar um mês de liberação com opções como 1, 2, 3 ou 5 anos. Lances ficam em uma opção separada.
-4. **Resultado:** parcela inicial, parcela depois da liberação, valor estimado, total pago e saldo restante. Uma frase explica se a diferença fica a favor ou contra o cliente.
+3. **Quando usar:** escolher qualquer ano dentro do prazo do contrato, o último período incompleto ou um mês personalizado. Lances ficam em uma opção separada.
+4. **Resultado:** parcelas, valor estimado, total pago, saldo restante, ROI no período e lance total, dividido entre recursos próprios e carta. Antes da contemplação, o lance aparece como previsto. Uma frase explica se a diferença fica a favor ou contra o cliente.
+
+O ROI usa o resultado estimado (valor estimado menos dívida e total pago) dividido pelo total pago do próprio bolso. É acumulado até o mês selecionado e não anualizado. O lance embutido não entra no total pago do próprio bolso.
+
+Em **Evolução dos valores**, passe o mouse, toque no gráfico ou use o controle de mês com as setas do teclado para consultar os valores exatos. **Valores mês a mês** inclui o valor pago acumulado, também disponível no CSV.
 
 A tela chama contemplação de **liberação do crédito** e explica o termo. A compra mostra quanto falta completar do próprio bolso; a venda mostra o recebimento líquido estimado. A linha do tempo permite olhar outro mês.
 
@@ -102,7 +108,7 @@ Em redes que exigem proxy, Node 24.5 ou posterior aceita `NODE_USE_ENV_PROXY=1` 
 npm.cmd test
 ```
 
-A suíte tem **44 testes**, incluindo cálculos, entrada direta sem conta, ausência de rotas que exponham os planos antigos, armazenamento local, importação de arquivos, falhas de armazenamento e inicialização em produção com o endereço fornecido pelo Render. Também foram conferidos a sintaxe JavaScript, a estrutura HTML, os rótulos e a presença dos 38 parâmetros. A revisão visual no navegador não foi realizada neste ambiente.
+A suíte tem **46 testes**, incluindo cálculos, todas as opções de anos, seleção do mês no gráfico, entrada direta sem conta, ausência de rotas que exponham os planos antigos, armazenamento local, importação de arquivos, falhas de armazenamento e inicialização em produção com o endereço fornecido pelo Render.
 
 Exemplo sem índices, rendimento ou seguro: crédito R$ 220.000, 220 meses, administração 24%, reserva 0,2%, liberação no mês 60. Parcela integral inicial: **R$ 1.242,00**. Reduzida inicial: **R$ 742,00**. Reduzida no mês 61: **R$ 1.429,50**. Total de parcelas: **R$ 273.240,00** em ambos os planos.
 

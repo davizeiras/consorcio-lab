@@ -63,5 +63,5 @@ const server=http.createServer(async(req,res)=>{
  }
 });
 server.requestTimeout=30000;server.headersTimeout=15000;
-server.listen(PORT,HOST,()=>console.log(`Consórcio Lab em ${ORIGIN}`));
+server.listen(PORT,HOST,()=>console.log(`Iran Solutions em ${ORIGIN}`));
 for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>server.close(()=>{db.close();process.exit(0);}));
