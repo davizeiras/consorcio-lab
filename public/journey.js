@@ -1,5 +1,8 @@
 // Regras de apresentação. As fórmulas financeiras continuam em engine.js.
-export const GOALS={hold:'Deixar o crédito rendendo',sale:'Vender a carta contemplada',property:'Usar o crédito no imóvel'};
+export const GOALS=Object.freeze({hold:'Render',sale:'Vender'});
+export function assertSupportedScenario(scenario){
+  if(!Object.hasOwn(GOALS,scenario))throw new Error('Este plano usa uma opção de imóvel que foi removida. Crie uma nova simulação em Render ou Vender. O plano original foi preservado.');
+}
 export function duration(months){
   if(!Number.isInteger(months)||months<1)return 'Informe o prazo';
   const years=Math.floor(months/12),rest=months%12;
