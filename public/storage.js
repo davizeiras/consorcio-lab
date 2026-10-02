@@ -4,7 +4,7 @@ export const STORAGE_KEY='consorcio-lab.planos.v1';
 export const MAX_PLANS=50;
 export const MAX_IMPORT_BYTES=2*1024*1024;
 export function normalizeSnapshot(payload,{imported=false}={}){
- if(!payload||typeof payload!=='object'||!payload.config||typeof payload.config!=='object'||Array.isArray(payload.config))throw new Error('Esse arquivo não contém uma simulação. Use um JSON baixado pelo Consórcio Lab.');
+ if(!payload||typeof payload!=='object'||!payload.config||typeof payload.config!=='object'||Array.isArray(payload.config))throw new Error('Esse arquivo não contém uma simulação. Use um JSON de plano baixado pelo Iran Solutions.');
  const config=validateConfig(payload.config),raw=payload.index||{},points=validatePoints(raw.points||[]);
  const provenance=imported?'manual':['bcb','manual','unavailable'].includes(raw.provenance)?raw.provenance:'manual';
  const fetchedAt=typeof raw.fetchedAt==='string'&&Number.isFinite(Date.parse(raw.fetchedAt))?new Date(raw.fetchedAt).toISOString():null;

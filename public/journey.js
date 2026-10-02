@@ -5,6 +5,15 @@ export function duration(months){
   const years=Math.floor(months/12),rest=months%12;
   return [years?`${years} ${years===1?'ano':'anos'}`:'',rest?`${rest} ${rest===1?'mês':'meses'}`:''].filter(Boolean).join(' e ');
 }
+export function contemplationOptions(term){
+  if(!Number.isInteger(term)||term<2||term>480)return [];
+  const months=Array.from({length:Math.floor(term/12)},(_,i)=>(i+1)*12);
+  if(term%12)months.push(term);
+  return months.map(month=>({month,label:`${duration(month)} · mês ${month}${month===term?' (fim do contrato)':''}`}));
+}
+export function chartMonthAt(fraction,count){
+  return 1+Math.round(Math.max(0,Math.min(1,fraction))*(count-1));
+}
 export function firstPayment(c){
   if(![c.credit,c.term,c.adminPercent,c.reservePercent].every(v=>typeof v==='number'&&Number.isFinite(v))||c.credit<1000||c.term<2)return null;
   const principal=c.plan==='reduced'?c.credit/2:c.credit;

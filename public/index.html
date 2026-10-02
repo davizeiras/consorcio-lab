@@ -2,14 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b101b"><title>Consórcio Lab · Seu plano, passo a passo</title>
+  <meta name="theme-color" content="#151515"><title>Iran Solutions · Seu plano, passo a passo</title>
   <link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#main-content">Ir para o simulador</a>
 <div id="app-view">
   <header class="app-header"><div class="header-inner">
-    <a class="brand" href="/"><img src="/favicon.svg" width="34" height="34" alt=""><span>Consórcio<span class="brand-light">Lab</span></span></a>
+    <a class="brand" href="/"><img src="/favicon.svg" width="34" height="34" alt=""><span>Iran<span class="brand-light">Solutions</span></span></a>
     <nav aria-label="Simulador"><button id="open-saved" class="text-button">Planos guardados</button><button id="open-import" class="text-button">Abrir arquivo</button><button id="open-rules" class="text-button">Me explique</button></nav>
     <span class="access-badge">Sem cadastro</span>
   </div></header>
@@ -79,22 +79,26 @@
           <div class="milestones"><button data-jump="start">Primeiro mês</button><button data-jump="contemplation">Na contemplação</button><button id="jump-event" data-jump="event" hidden>No uso do crédito</button><button data-jump="end">Fim da simulação</button></div>
         </section>
         <section class="metrics" aria-label="Valores no mês escolhido">
-          <div class="metric blue"><span id="asset-label">Valor estimado</span><strong id="metric-assets">—</strong><small id="metric-assets-note"></small></div>
+          <div class="metric accent"><span id="asset-label">Valor estimado</span><strong id="metric-assets">—</strong><small id="metric-assets-note"></small></div>
           <div class="metric"><span>Você já teria pago</span><strong id="metric-paid">—</strong><small>Parcelas e valores pagos do seu bolso até este mês.</small></div>
           <div class="metric"><span>Ainda faltaria pagar</span><strong id="metric-debt">—</strong><small>Saldo e taxas restantes. Não inclui reajustes e seguros futuros.</small></div>
         </section>
-        <section class="result-explained"><div><span>Diferença estimada a seu favor ou contra</span><strong id="metric-result">—</strong><small id="metric-roi"></small></div><div><p id="result-explanation"></p><small>Comparamos o valor estimado com tudo o que você pagou e ainda deve. É uma estimativa, sem descontar a inflação.</small></div></section>
+        <section class="outcome-metrics" aria-label="ROI e lance da simulação">
+          <div class="metric roi-metric"><span>ROI no período</span><strong id="metric-roi">—</strong><small id="roi-period"></small><p class="metric-formula">ROI = resultado ÷ total pago × 100. Percentual acumulado, não anualizado.</p></div>
+          <div class="metric bid-metric"><span id="metric-bid-label">Lance utilizado na simulação</span><strong id="metric-bid">—</strong><small id="metric-bid-period"></small><dl class="bid-parts"><div><dt>Do seu bolso</dt><dd id="metric-bid-own">—</dd></div><div><dt>Retirado da carta</dt><dd id="metric-bid-embedded">—</dd></div></dl></div>
+        </section>
+        <section class="result-explained"><div><span>Diferença estimada a seu favor ou contra</span><strong id="metric-result">—</strong><small id="result-context"></small></div><div><p id="result-explanation"></p><small>Comparamos o valor estimado com tudo o que você pagou e ainda deve. É uma estimativa, sem descontar a inflação.</small></div></section>
         <details class="card disclosure"><summary>Entender o plano, passo a passo</summary><div class="details-content"><button class="text-button" data-edit="2">Mudar a data simulada</button><ol id="plan-story" class="plan-story"></ol><div id="event-details" class="event-details" hidden></div></div></details>
         <section class="card save-card"><div><h3>Quer guardar este plano?</h3><p id="save-status" role="status">Guarde neste navegador ou baixe um arquivo para abrir depois.</p></div><div class="save-fields"><label>Nome do plano <small>Opcional</small><input form="config-form" name="name" maxlength="100" placeholder="Ex.: meu primeiro imóvel"></label><div class="save-buttons"><button id="save" class="button primary">Guardar aqui</button><button id="download-plan" class="button secondary">Baixar arquivo</button></div></div><p class="storage-note">“Guardar aqui” salva apenas neste navegador. Se limpar os dados dele, os planos serão apagados. Baixe um arquivo para ter uma cópia.</p></section>
         <h3 class="details-heading">Quer olhar mais de perto?</h3><p class="details-intro">Abra só o que quiser conferir.</p>
-        <details class="card disclosure" id="chart-details"><summary>Evolução dos valores</summary><div class="details-content"><div class="legend"><span>Valor estimado</span><span>Total pago</span><span>Ainda falta pagar</span></div><div id="chart" class="chart" role="img" aria-label="Evolução dos valores"></div><p class="field-help">Antes da contemplação, o valor representa um direito ao crédito, ainda indisponível. Os valores completos estão na tabela mensal.</p></div></details>
+        <details class="card disclosure" id="chart-details"><summary>Evolução dos valores</summary><div class="details-content"><p class="field-help">Passe o mouse ou toque no gráfico para consultar os valores exatos de cada mês.</p><div class="legend"><span>Valor estimado</span><span>Total pago</span><span>Ainda falta pagar</span></div><div id="chart" class="chart" role="group" aria-label="Evolução dos valores"></div><div class="chart-controls"><label for="chart-month">Consultar mês no gráfico</label><output id="chart-month-label" for="chart-month"></output><input id="chart-month" type="range" min="1" max="220" value="220"></div><p class="field-help">Antes da contemplação, o valor representa um direito ao crédito, ainda indisponível. Os valores completos estão na tabela mensal.</p></div></details>
         <details class="card disclosure"><summary>O que compõe a parcela e o resultado</summary><div class="details-content"><p id="detail-month"></p><div id="breakdown" class="breakdown"></div></div></details>
         <details class="card disclosure"><summary>Comparar parcela integral e reduzida</summary><div class="details-content"><p>Veja como a mesma simulação muda com outro tipo de parcela.</p><button id="compare" class="button secondary">Comparar as duas opções</button><div id="comparison" hidden></div></div></details>
-        <details class="card disclosure"><summary>Valores mês a mês</summary><div class="details-content"><button id="export-csv" class="button secondary">Baixar tabela (CSV)</button><div class="table-scroll"><table><caption class="sr-only">Evolução mensal da simulação</caption><thead><tr><th scope="col">Mês</th><th scope="col">Parcela</th><th scope="col">Falta pagar</th><th scope="col">Valor estimado</th><th scope="col">Resultado</th><th scope="col">Reajuste / origem</th></tr></thead><tbody id="monthly-body"></tbody></table></div><div class="pagination"><button id="prev-page" class="text-button">← Anterior</button><span id="page-label"></span><button id="next-page" class="text-button">Próxima →</button></div></div></details>
+        <details class="card disclosure"><summary>Valores mês a mês</summary><div class="details-content"><button id="export-csv" class="button secondary">Baixar tabela (CSV)</button><p class="field-help">Valor pago acumulado: parcelas, lance do seu bolso e complementos até cada mês. O lance retirado da carta não é um pagamento do seu bolso.</p><div class="table-scroll"><table><caption class="sr-only">Evolução mensal da simulação</caption><thead><tr><th scope="col">Mês</th><th scope="col">Parcela</th><th scope="col">Valor pago acumulado</th><th scope="col">Falta pagar</th><th scope="col">Valor estimado</th><th scope="col">Resultado</th><th scope="col">Reajuste / origem</th></tr></thead><tbody id="monthly-body"></tbody></table></div><div class="pagination"><button id="prev-page" class="text-button">← Anterior</button><span id="page-label"></span><button id="next-page" class="text-button">Próxima →</button></div></div></details>
         <details class="card disclosure"><summary>Hipóteses usadas nesta simulação</summary><div class="details-content"><p id="result-index-note"></p><div id="assumption-values" class="breakdown"></div><ul id="warnings"></ul><button id="export-json" class="button secondary">Baixar dados completos (JSON)</button></div></details>
       </div>
     </section>
-    <footer class="page-footer"><span>Consórcio Lab</span><span>Simulação baseada nas suas escolhas. Não garante contemplação, venda ou rendimento.</span></footer>
+    <footer class="page-footer"><span>Iran Solutions</span><span>Simulação baseada nas suas escolhas. Não garante contemplação, venda ou rendimento.</span></footer>
   </main>
 </div>
 <dialog id="saved-dialog" aria-labelledby="saved-title"><div class="dialog-heading"><h2 id="saved-title">Planos guardados aqui</h2><button class="icon-button" data-close="saved-dialog" aria-label="Fechar">×</button></div><p class="field-help">Estes planos ficam neste navegador. Em um aparelho compartilhado, outras pessoas que usem o mesmo navegador poderão vê-los.</p><div id="saved-list"></div></dialog>

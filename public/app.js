@@ -1,5 +1,5 @@
 import {DEFAULTS,simulate,validatePoints} from './engine.js';
-import {GOALS,duration,firstPayment,syncChoices,assetCopy,afterPayment} from './journey.js';
+import {GOALS,duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt} from './journey.js';
 import {savePlan,listPlans,getPlan,removePlan,parseImport,MAX_IMPORT_BYTES} from './storage.js';
 const UI_DEFAULTS={...DEFAULTS,name:''};
 const $=id=>document.getElementById(id),form=$('config-form');
@@ -26,7 +26,7 @@ $('index-fields').innerHTML=select('indexVariant','Índice previsto no contrato'
  fields(n('forecastAnnual','Reajuste estimado para o futuro','% ao ano · hipótese editável',-50,100),select('adjustmentFrequency','Quando aplicar o reajuste?',[['annual','Uma vez por ano'],['monthly','Todo mês']]))+
  help('O índice corrige só o saldo do crédito ainda não pago neste modelo. Taxas e seguro ficam fixos.')+n('indexLag','Usar o índice de quantos meses antes?','meses · conforme o contrato',1,6,'1');
 $('period-fields').innerHTML=fields('<label for="field-startMonth">Quando começa?<input id="field-startMonth" form="config-form" name="startMonth" type="month" required min="1900-01" max="2199-12" data-label="Quando começa?"></label>',n('horizon','Por quantos meses quer simular?','Pode ir além do prazo do contrato',2,600,'1'));
-$('contemplation-fields').innerHTML=n('contemplationMonth','Em qual mês quer testar a liberação?','Exemplo: 12 meses = 1 ano',1,480,'1')+presets('contemplationMonth',[[12,'1 ano'],[24,'2 anos'],[36,'3 anos'],[60,'5 anos']])+'<p id="contemplation-help" class="field-help"></p>';
+$('contemplation-fields').innerHTML=fields('<label for="contemplation-year">Quando quer ser contemplado?<span class="label-unit">Todos os anos dentro do prazo do contrato</span><select id="contemplation-year"></select></label>',n('contemplationMonth','Ou escolha um mês específico','Exemplo: 12 meses = 1 ano',1,480,'1'))+'<p id="contemplation-help" class="field-help"></p>';
 $('bid-method-field').innerHTML=select('bidType','Como quer tentar a liberação?',[['draw','Sorteio · sem lance'],['free','Lance livre'],['fixed25','Lance fixo de 25%'],['fixed40','Lance fixo de 40%'],['loyalty','Lance fidelidade']]);
 $('bid-fields').innerHTML=fields(n('ownBidPercent','Lance do seu bolso','% do crédito',0,100),n('embeddedBidPercent','Lance retirado da carta','% do crédito · lance embutido',0,100))+'<p id="bid-summary" class="bid-summary"></p>'+help('O lance do seu bolso exige dinheiro extra. O lance retirado da carta diminui o crédito que você poderá usar. Os dois reduzem o saldo a pagar neste modelo.');
 $('loyalty-inputs').innerHTML=fields(n('loyaltyMin','Primeiro mês permitido','meses pagos',1,480,'1'),n('loyaltyMax','Último mês permitido','meses pagos',1,480,'1'),n('loyaltyMinBid','Lance mínimo','% do crédito',0,100),n('loyaltyMaxBid','Lance máximo','% do crédito',0,100))+help('O lance fidelidade considera apenas a faixa de participação informada. Não prevê concorrentes nem lance vencedor.');
@@ -69,6 +69,9 @@ function updateVisibility(){
  document.querySelectorAll('[data-preset-field]').forEach(b=>{b.setAttribute('aria-pressed',String(c[b.dataset.presetField]===Number(b.dataset.presetValue)));b.disabled=b.dataset.presetField==='contemplationMonth'&&Number(b.dataset.presetValue)>c.term;});
  $('bid-summary').textContent=c.ownBidPercent!==null&&c.embeddedBidPercent!==null?`Lance total: ${pct(c.ownBidPercent+c.embeddedBidPercent)} do crédito.`:'';
  $('field-contemplationMonth').max=c.term??480;
+ const options=contemplationOptions(c.term),year=$('contemplation-year');
+ year.innerHTML='<option value="">Mês personalizado</option>'+options.map(o=>`<option value="${o.month}">${o.label}</option>`).join('');
+ year.value=options.some(o=>o.month===c.contemplationMonth)?String(c.contemplationMonth):'';year.disabled=options.length===0;
  for(const key of ['saleMonth','useMonth']){$('field-'+key).min=c.contemplationMonth??1;$('field-'+key).max=c.horizon??600;}
 }
 function markDirty(){state.dirty=true;$('save-status').textContent='Você fez alterações. Salve para guardar esta versão.';}
@@ -163,7 +166,13 @@ function renderSelected(){
  document.querySelectorAll('[data-jump]').forEach(b=>b.setAttribute('aria-pressed',String(jumpMonth(b.dataset.jump)===r.month)));
  $('asset-label').textContent=copy.label;$('metric-assets-note').textContent=copy.note;
  $('metric-assets').textContent=money(r.assets);$('metric-paid').textContent=money(r.totalPaid);$('metric-debt').textContent=money(r.debt);$('metric-result').textContent=money(r.result);$('metric-result').className=r.result>=0?'positive':'negative';
- $('metric-roi').textContent=r.month<c.contemplationMonth?'O crédito ainda não estaria liberado.':r.sold?'Considera o dinheiro recebido e investido.':r.used?'Inclui o valor do imóvel ou benefício informado.':'Inclui crédito vinculado à administradora.';
+ $('result-context').textContent=r.month<c.contemplationMonth?'O crédito ainda não estaria liberado.':r.sold?'Considera o dinheiro recebido e investido.':r.used?'Inclui o valor do imóvel ou benefício informado.':'Inclui crédito vinculado à administradora.';
+ $('metric-roi').textContent=r.roiPercent===null?'—':pct(r.roiPercent);$('metric-roi').className=r.roiPercent<0?'negative':'positive';
+ $('roi-period').textContent=`Retorno estimado até o mês ${r.month}, sobre ${money(r.totalPaid)} pagos do seu bolso.`;
+ const totalBid=summary.ownBid+summary.embeddedBid;
+ $('metric-bid-label').textContent=totalBid===0?'Sem lance':r.month<c.contemplationMonth?'Lance previsto na simulação':'Lance utilizado na simulação';
+ $('metric-bid').textContent=money(totalBid);$('metric-bid-own').textContent=money(summary.ownBid);$('metric-bid-embedded').textContent=money(summary.embeddedBid);
+ $('metric-bid-period').textContent=totalBid===0?'Contemplação por sorteio é a hipótese escolhida.':`${pct(c.ownBidPercent+c.embeddedBidPercent)} do crédito corrigido na contemplação · mês ${c.contemplationMonth}.`;
  $('result-explanation').textContent=Math.abs(r.result)<0.005?'O valor estimado empata com o total que você pagou e ainda deve.':`Depois de descontar o que você já pagou e o que ainda deve, a diferença seria de ${money(Math.abs(r.result))} ${r.result>=0?'a seu favor':'contra você'}.`;
  $('detail-month').textContent=`Valores no mês ${r.month}`;
  const uninsured=c.insuranceMonthly===null&&(c.insuranceBefore||r.month>=c.contemplationMonth)&&r.month<=c.term&&(!r.sold||r.month===c.saleMonth);
@@ -174,17 +183,32 @@ function renderSelected(){
  if($('chart-details').open)renderChart();
 }
 function jumpMonth(target){const c=state.result.config;return target==='start'?1:target==='end'?c.horizon:target==='event'?(c.scenario==='sale'?c.saleMonth:c.useMonth):c.contemplationMonth;}
+let chartGeometry;
 function renderChart(){
  const rows=state.result.rows,w=720,h=260,left=50,right=10,top=14,bottom=35,max=Math.max(1,...rows.flatMap(r=>[r.assets,r.totalPaid,r.debt]))*1.12;
  const x=m=>left+(m-1)/(rows.length-1)*(w-left-right),y=v=>h-bottom-v/max*(h-top-bottom);
  const line=key=>rows.map((r,i)=>`${i?'L':'M'}${x(r.month).toFixed(2)},${y(r[key]).toFixed(2)}`).join(' ');
- let guides='';for(let i=0;i<=4;i++){const value=max*i/4,yy=y(value),m=Math.round(1+(rows.length-1)*i/4);guides+=`<line x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}" stroke="#2c3850" stroke-dasharray="3 5"/><text x="${left-10}" y="${yy+3}" text-anchor="end" fill="#90a2bd" font-size="9">${compact(value)}</text><text x="${x(m)}" y="${h-12}" text-anchor="middle" fill="#90a2bd" font-size="9">${m}m</text>`;}
- const s=rows[state.selected-1];$('chart').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3677ff" stop-opacity=".2"/><stop offset="100%" stop-color="#3677ff" stop-opacity="0"/></linearGradient></defs>${guides}<path d="${line('assets')} L${x(rows.length)},${y(0)} L${x(1)},${y(0)} Z" fill="url(#area)"/><path d="${line('assets')}" fill="none" stroke="#568cff" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path d="${line('totalPaid')}" fill="none" stroke="#a2b2ca" stroke-width="1.8" vector-effect="non-scaling-stroke"/><path d="${line('debt')}" fill="none" stroke="#e1b183" stroke-width="1.5" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"/><line x1="${x(s.month)}" x2="${x(s.month)}" y1="${top}" y2="${h-bottom}" stroke="#779bce" stroke-dasharray="3 4"/><circle cx="${x(s.month)}" cy="${y(s.assets)}" r="4" fill="#d4e4ff" stroke="#3677ff" stroke-width="2"/></svg>`;
- $('chart').setAttribute('aria-label',`Em ${rows.length} meses. No mês ${s.month}: patrimônio ${money(s.assets)}, desembolso ${money(s.totalPaid)} e dívida ${money(s.debt)}. Dados completos na tabela abaixo.`);
+ let guides='';for(let i=0;i<=4;i++){const value=max*i/4,yy=y(value),m=Math.round(1+(rows.length-1)*i/4);guides+=`<line x1="${left}" x2="${w-right}" y1="${yy}" y2="${yy}" stroke="#dedede" stroke-dasharray="3 5"/><text x="${left-10}" y="${yy+3}" text-anchor="end" fill="#616161" font-size="9">${compact(value)}</text><text x="${x(m)}" y="${h-12}" text-anchor="middle" fill="#616161" font-size="9">${m}m</text>`;}
+ $('chart').innerHTML=`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#da0029" stop-opacity=".13"/><stop offset="100%" stop-color="#da0029" stop-opacity="0"/></linearGradient></defs>${guides}<path d="${line('assets')} L${x(rows.length)},${y(0)} L${x(1)},${y(0)} Z" fill="url(#area)"/><path d="${line('assets')}" fill="none" stroke="#da0029" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path d="${line('totalPaid')}" fill="none" stroke="#202020" stroke-width="1.8" vector-effect="non-scaling-stroke"/><path d="${line('debt')}" fill="none" stroke="#777" stroke-width="1.5" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"/><g id="chart-guide"><line y1="${top}" y2="${h-bottom}" stroke="#777" stroke-dasharray="3 4"/>${['assets','totalPaid','debt'].map((key,i)=>`<circle data-series="${key}" r="4" fill="white" stroke="${['#da0029','#202020','#777'][i]}" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join('')}</g></svg><div id="chart-tooltip" class="chart-tooltip"></div>`;
+ chartGeometry={rows,w,left,right,x,y};$('chart-month').max=rows.length;renderChartMonth(state.selected);
+}
+function renderChartMonth(month){
+ if(!chartGeometry)return;const {rows,w,x,y}=chartGeometry,r=rows[month-1];if(!r)return;
+ const guide=$('chart-guide'),line=guide.querySelector('line');line.setAttribute('x1',x(month));line.setAttribute('x2',x(month));
+ guide.querySelectorAll('circle').forEach(dot=>{dot.setAttribute('cx',x(month));dot.setAttribute('cy',y(r[dot.dataset.series]));});
+ const tooltip=$('chart-tooltip');tooltip.innerHTML=`<strong>Mês ${r.month} · ${esc(monthName(r.date))}</strong><dl><div><dt>Valor estimado</dt><dd>${money(r.assets)}</dd></div><div><dt>Total pago</dt><dd>${money(r.totalPaid)}</dd></div><div><dt>Falta pagar</dt><dd>${money(r.debt)}</dd></div></dl>`;
+ const width=$('chart').clientWidth,point=x(month)/w*width,tipWidth=tooltip.offsetWidth;
+ tooltip.style.left=`${Math.max(0,Math.min(width-tipWidth,point+16+tipWidth>width?point-tipWidth-16:point+16))}px`;
+ $('chart-month').value=month;$('chart-month-label').textContent=`Mês ${month} · ${monthName(r.date)}`;
+ $('chart-month').setAttribute('aria-valuetext',`Mês ${month}, ${monthName(r.date)}. Valor estimado ${money(r.assets)}, total pago ${money(r.totalPaid)}, falta pagar ${money(r.debt)}.`);
+}
+function inspectChart(event){
+ if(!chartGeometry)return;const {w,left,right,rows}=chartGeometry,rect=$('chart').querySelector('svg').getBoundingClientRect();if(!rect.width)return;
+ renderChartMonth(chartMonthAt(((event.clientX-rect.left)/rect.width*w-left)/(w-left-right),rows.length));
 }
 function renderTable(){
  if(!state.result)return;const rows=state.result.rows.slice(state.page*12,state.page*12+12);
- $('monthly-body').innerHTML=rows.map(r=>`<tr class="${r.month===state.selected?'selected':''}"><td>${r.month}<small>${r.date}</small></td><td>${money(r.installment)}</td><td>${money(r.debt)}</td><td>${money(r.assets)}</td><td class="${r.result>=0?'positive':'negative'}">${money(r.result)}</td><td>${r.indexMonth?pct(r.indexPercent):'—'}<small class="origin ${r.indexSource.startsWith('Publicado')?'real':''}">${esc(r.indexSource)}</small></td></tr>`).join('');
+ $('monthly-body').innerHTML=rows.map(r=>`<tr class="${r.month===state.selected?'selected':''}"><td>${r.month}<small>${r.date}</small></td><td>${money(r.installment)}</td><td>${money(r.totalPaid)}</td><td>${money(r.debt)}</td><td>${money(r.assets)}</td><td class="${r.result>=0?'positive':'negative'}">${money(r.result)}</td><td>${r.indexMonth?pct(r.indexPercent):'—'}<small class="origin ${r.indexSource.startsWith('Publicado')?'real':''}">${esc(r.indexSource)}</small></td></tr>`).join('');
  const pages=Math.ceil(state.result.rows.length/12);$('page-label').textContent=`Página ${state.page+1} de ${pages}`;$('prev-page').disabled=state.page===0;$('next-page').disabled=state.page>=pages-1;
 }
 function renderIndex(){
@@ -208,6 +232,7 @@ function newSimulation(){
  $('timing-note').hidden=true;$('manual-upload').value='';closeDetails();recalculate();renderIndex();showStep(0,false);$('save-status').textContent='Guarde neste navegador ou baixe um arquivo para abrir depois.';
 }
 form.addEventListener('submit',e=>{e.preventDefault();if(state.step<3)navigate(state.step+1);});
+$('contemplation-year').addEventListener('change',e=>{if(!e.target.value){$('field-contemplationMonth').focus();return;}const input=$('field-contemplationMonth');input.value=e.target.value;input.dispatchEvent(new Event('change',{bubbles:true}));});
 $('next-step').addEventListener('click',()=>navigate(state.step+1));$('previous-step').addEventListener('click',()=>navigate(state.step-1));
 document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>navigate(Number(b.dataset.step))));
 document.addEventListener('click',e=>{
@@ -228,6 +253,8 @@ document.addEventListener('change',e=>{
 $('timeline').addEventListener('input',e=>{state.selected=Number(e.target.value);state.page=Math.floor((state.selected-1)/12);renderSelected();renderTable();});
 document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{if(!state.result)return;state.selected=jumpMonth(b.dataset.jump);state.page=Math.floor((state.selected-1)/12);renderSelected();renderTable();}));
 $('chart-details').addEventListener('toggle',()=>{if($('chart-details').open&&state.result)renderChart();});
+$('chart').addEventListener('pointermove',inspectChart);$('chart').addEventListener('pointerdown',inspectChart);
+$('chart-month').addEventListener('input',e=>renderChartMonth(Number(e.target.value)));
 $('prev-page').addEventListener('click',()=>{state.page=Math.max(0,state.page-1);renderTable();});$('next-page').addEventListener('click',()=>{state.page=Math.min(Math.ceil(state.result.rows.length/12)-1,state.page+1);renderTable();});$('refresh-index').addEventListener('click',()=>refreshIndex());
 $('reset').addEventListener('click',()=>{if(state.dirty&&!confirm('Começar uma nova simulação? As alterações ainda não salvas serão descartadas.'))return;newSimulation();refreshIndex(true);$('step-title-0').focus();});
 $('compare').addEventListener('click',()=>{
