@@ -1,8 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {DEFAULTS,simulate} from '../public/engine.js';
-import {duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt} from '../public/journey.js';
+import {GOALS,assertSupportedScenario,duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt} from '../public/journey.js';
 const config=overrides=>({...DEFAULTS,credit:220000,indexVariant:'manual',forecastAnnual:0,insuranceMonthly:0,creditAnnualReturn:0,cashAnnualReturn:0,...overrides});
+
+test('a jornada oferece render e vender e não converte silenciosamente um plano imobiliário antigo',()=>{
+ assert.deepEqual(Object.keys(GOALS),['hold','sale']);
+ for(const scenario of Object.keys(GOALS))assert.doesNotThrow(()=>assertSupportedScenario(scenario));
+ const old=config({scenario:'property'}),original=structuredClone(old);
+ assert.throws(()=>assertSupportedScenario(old.scenario),/plano original foi preservado/);
+ assert.deepEqual(old,original);assert.doesNotThrow(()=>simulate(old));
+});
 
 test('todos os anos do contrato são selecionáveis, incluindo o último período incompleto',()=>{
  const options=contemplationOptions(220);
