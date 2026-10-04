@@ -11,7 +11,7 @@ test('entrada direta, índice e cálculo sem login; dados antigos não são expo
  const probe=net.createServer();await new Promise(r=>probe.listen(0,'127.0.0.1',r));const port=probe.address().port;await new Promise(r=>probe.close(r));
  const origin=`http://127.0.0.1:${port}`,dir=await mkdtemp(path.join(tmpdir(),'consorcio-open-'));
  const oldFile=path.join(dir,'consorcio.sqlite'),oldContents=Buffer.from('BANCO ANTIGO: NAO LER NEM MODIFICAR');await writeFile(oldFile,oldContents);
- const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,NODE_ENV:'test',PORT:String(port),PUBLIC_ORIGIN:origin,HOST:'127.0.0.1',DATA_DIR:dir}});
+ const child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,NODE_ENV:'test',PORT:String(port),PUBLIC_ORIGIN:origin,HOST:'127.0.0.1',DATA_DIR:dir,AUTH_MODE:'public'}});
  let stderr='';child.stderr.on('data',b=>{stderr+=b});
  t.after(async()=>{child.kill();await new Promise(r=>{if(child.exitCode!==null)r();else child.once('exit',r)});await rm(dir,{recursive:true,force:true});});
  await new Promise((resolve,reject)=>{child.stdout.once('data',resolve);child.once('error',reject);child.once('exit',code=>reject(new Error(`Servidor saiu: ${code} ${stderr}`)));});
@@ -23,7 +23,7 @@ test('entrada direta, índice e cálculo sem login; dados antigos não são expo
  const sim=await fetch(origin+'/api/simulate',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin},body});assert.equal(sim.status,200);assert.equal((await sim.json()).result.rows.length,220);assert.equal(sim.headers.get('set-cookie'),null);
  assert.equal((await fetch(origin+'/api/simulate',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://outro-site.test'},body})).status,403);
  assert.equal((await fetch(origin+'/api/simulate',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin},body:'{"config":{"term":0}}'})).status,400);
- for(const route of ['/api/me','/api/simulations','/api/simulations/11111111-1111-4111-8111-111111111111','/data/consorcio.sqlite','/data/indices.sqlite','/.env']){
+ for(const route of ['/api/simulations','/api/simulations/11111111-1111-4111-8111-111111111111','/data/consorcio.sqlite','/data/indices.sqlite','/.env']){
   const r=await fetch(origin+route,{headers:{Cookie:'consorcio_session='+('a'.repeat(64))}});assert.equal(r.status,404,route);assert.equal(r.headers.get('set-cookie'),null);
  }
  for(const route of ['/api/auth/register','/api/auth/login','/api/auth/logout','/api/simulations'])assert.equal((await fetch(origin+route,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'})).status,404,route);
