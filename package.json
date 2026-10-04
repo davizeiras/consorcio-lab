@@ -1,6 +1,6 @@
 {
   "name": "iran-solutions",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "description": "Simulador de consórcio sem cadastro, com planos no navegador e índices publicados",

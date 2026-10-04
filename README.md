@@ -2,7 +2,7 @@
 
 Abra o endereço e comece a simular. Esta versão não pede nome, e-mail, senha ou cadastro.
 
-A versão 2.2.0 mantém apenas dois objetivos: **Render** e **Vender**, com a identidade Iran Solutions em vermelho, branco e preto. O resumo lateral, a comparação de parcelas e as explicações duplicadas foram removidos. Taxas e detalhes do cálculo ficam em uma única seção recolhida.
+A versão 2.3.0 mantém os objetivos **Render** e **Vender**, com a identidade Iran Solutions em vermelho, branco e preto. Ganhos e ROI positivos aparecem em verde; perdas continuam em vermelho. O resultado da venda mostra a carta disponível antes da operação ao lado do recebimento líquido. Uma aba **Poupança** compara os mesmos desembolsos com juros compostos.
 
 **Para colocar na internet:** siga [PUBLICAR-GRATIS.md](PUBLICAR-GRATIS.md). A versão 2.0.1 inclui a configuração do Render Free e detecta o endereço público automaticamente. Ainda é necessário criar o serviço na sua conta.
 
@@ -31,6 +31,10 @@ Não precisa executar `npm install`. Se o terminal mostrar `ENOENT package.json`
 O ROI usa o resultado estimado (valor estimado menos dívida e total pago) dividido pelo total pago do próprio bolso. É acumulado até o mês selecionado e não anualizado. O lance embutido não entra no total pago do próprio bolso.
 
 Em **Evolução dos valores**, passe o mouse, toque no gráfico ou use o controle de mês com as setas do teclado para consultar os valores exatos. **Valores mês a mês** inclui o valor pago acumulado, também disponível no CSV.
+
+Em **Resultado → Poupança**, cada parcela e lance próprio vira um depósito no fim do mesmo mês, começando a render no mês seguinte. O lance embutido não é dinheiro do bolso e não vira depósito. Depois da venda, não há novos aportes; o saldo segue rendendo pelo período selecionado. O controle de mês é compartilhado entre as abas. A comparação exibe total investido, valores estimados, dívida, resultado e ROI, sem anualização.
+
+A taxa mensal é editável (0% a 10%); **0,5% é uma hipótese inicial, não uma cotação**. Não há consulta automática de TR/Selic nem cálculo por dia de aniversário. É uma projeção de juros compostos a taxa constante, não a reprodução do extrato real da poupança. [Regras de remuneração no Banco Central](https://www.bcb.gov.br/meubc/faqs/p/como-sao-remunerados-os-depositos-da-poupanca). A taxa escolhida é preservada nos planos e arquivos; planos antigos recebem a hipótese inicial sem alterar o cálculo do consórcio.
 
 A tela chama contemplação de **liberação do crédito** e explica o termo. A venda mostra o recebimento líquido estimado. A linha do tempo permite olhar outro mês.
 
@@ -95,6 +99,7 @@ Em redes que exigem proxy, Node 24.5 ou posterior aceita `NODE_USE_ENV_PROXY=1` 
 | `public/journey.js` | Textos de resumo e coerência das datas |
 | `public/storage.js` | Planos no navegador e importação de JSON |
 | `public/engine.js` | Cálculos e validações financeiras |
+| `public/savings.js` | Juros compostos sobre os mesmos pagamentos, mês a mês |
 | `server.mjs` | Arquivos públicos e consulta de índices, sem autenticação |
 | `src/indices.mjs` | Consulta e cache dos índices publicados |
 | `tests/` | Testes do motor, jornada, armazenamento e servidor |
@@ -108,7 +113,7 @@ Em redes que exigem proxy, Node 24.5 ou posterior aceita `NODE_USE_ENV_PROXY=1` 
 npm.cmd test
 ```
 
-A suíte tem **47 testes**, incluindo cálculos, os dois objetivos atuais, preservação dos planos imobiliários antigos, todas as opções de anos, seleção do mês no gráfico, entrada direta sem conta, ausência de rotas que exponham os planos antigos, armazenamento local, importação de arquivos, falhas de armazenamento e inicialização em produção com o endereço fornecido pelo Render.
+A suíte tem **53 testes**, incluindo os juros compostos conferidos pela fórmula de depósitos regulares, aportes interrompidos na venda, lances, reajustes, seguro, taxas inválidas, salvamento da comparação e compatibilidade com planos anteriores. Também cobre cálculos do consórcio, os dois objetivos atuais, planos imobiliários antigos, opções de anos, mês no gráfico, entrada sem conta, proteção dos dados antigos, armazenamento local e inicialização em produção.
 
 Exemplo sem índices, rendimento ou seguro: crédito R$ 220.000, 220 meses, administração 24%, reserva 0,2%, liberação no mês 60. Parcela integral inicial: **R$ 1.242,00**. Reduzida inicial: **R$ 742,00**. Reduzida no mês 61: **R$ 1.429,50**. Total de parcelas: **R$ 273.240,00** em ambos os planos.
 

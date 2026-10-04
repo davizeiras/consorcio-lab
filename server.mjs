@@ -31,7 +31,7 @@ async function body(req){
  try{const data=JSON.parse(Buffer.concat(chunks).toString('utf8'));if(!data||typeof data!=='object'||Array.isArray(data))throw new Error();return data;}
  catch{throw new HttpError(400,'JSON inválido.');}
 }
-const files=new Map([['/',['index.html','text/html']],['/app.js',['app.js','text/javascript']],['/journey.js',['journey.js','text/javascript']],['/storage.js',['storage.js','text/javascript']],['/engine.js',['engine.js','text/javascript']],['/styles.css',['styles.css','text/css']],['/favicon.svg',['favicon.svg','image/svg+xml']]]);
+const files=new Map([['/',['index.html','text/html']],['/app.js',['app.js','text/javascript']],['/journey.js',['journey.js','text/javascript']],['/storage.js',['storage.js','text/javascript']],['/savings.js',['savings.js','text/javascript']],['/engine.js',['engine.js','text/javascript']],['/styles.css',['styles.css','text/css']],['/favicon.svg',['favicon.svg','image/svg+xml']]]);
 const server=http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY');res.setHeader('Referrer-Policy','same-origin');
  res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
