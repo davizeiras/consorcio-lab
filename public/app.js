@@ -1,3 +1,4 @@
+import {planStorage} from './account.js';
 import {DEFAULTS,simulate,validatePoints} from './engine.js';
 import {GOALS,duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt,assertSupportedScenario} from './journey.js';
 import {savePlan,listPlans,getPlan,removePlan,parseImport,MAX_IMPORT_BYTES} from './storage.js';
@@ -307,12 +308,12 @@ $('download-plan').addEventListener('click',()=>{
 $('save').addEventListener('click',()=>{
  clearTimeout(editTimer);recalculate();if(!state.valid||!validComparisonForSaving())return;
  try{
-  const d=savePlan(window.localStorage,{config:state.result.config,index:state.index,comparison:{monthlyRate:state.savingsRate}});state.indexRequest++;state.index=d.index;$('refresh-index').disabled=false;state.dirty=false;recalculate();
+  const d=savePlan(planStorage,{config:state.result.config,index:state.index,comparison:{monthlyRate:state.savingsRate}});state.indexRequest++;state.index=d.index;$('refresh-index').disabled=false;state.dirty=false;recalculate();
   $('save-status').textContent='Guardado neste navegador. Encontre em “Planos guardados”.';toast('Plano guardado aqui.');
  }catch(e){toast(e.message,true);}
 });
 function loadSaved(){
- try{const plans=listPlans(window.localStorage);$('saved-list').innerHTML=plans.length?plans.map(s=>`<div class="saved-item"><div><strong>${esc(s.name)}</strong><small>${new Date(s.savedAt).toLocaleString('pt-BR')}</small></div><div class="actions"><button class="button secondary small" data-load="${s.id}">Abrir</button><button class="text-button" data-delete="${s.id}">Excluir</button></div></div>`).join(''):'<p>Ainda não há planos guardados aqui. Faça uma simulação e clique em “Guardar aqui” no resultado.</p>';}catch(e){$('saved-list').textContent=e.message;}
+ try{const plans=listPlans(planStorage);$('saved-list').innerHTML=plans.length?plans.map(s=>`<div class="saved-item"><div><strong>${esc(s.name)}</strong><small>${new Date(s.savedAt).toLocaleString('pt-BR')}</small></div><div class="actions"><button class="button secondary small" data-load="${s.id}">Abrir</button><button class="text-button" data-delete="${s.id}">Excluir</button></div></div>`).join(''):'<p>Ainda não há planos guardados aqui. Faça uma simulação e clique em “Guardar aqui” no resultado.</p>';}catch(e){$('saved-list').textContent=e.message;}
 }
 function openSnapshot(d,{imported=false}={}){
  assertSupportedScenario(d.config.scenario);
@@ -326,8 +327,8 @@ $('open-saved').addEventListener('click',()=>{$('saved-dialog').showModal();load
 $('saved-list').addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  try{
-  if(b.dataset.load){if(state.dirty&&!confirm('Abrir outro plano e descartar as alterações ainda não guardadas?'))return;const d=getPlan(window.localStorage,b.dataset.load);$('saved-dialog').close();openSnapshot(d);toast('Plano aberto com os índices usados no salvamento.');}
-  if(b.dataset.delete&&confirm('Excluir este plano deste navegador?')){removePlan(window.localStorage,b.dataset.delete);loadSaved();}
+  if(b.dataset.load){if(state.dirty&&!confirm('Abrir outro plano e descartar as alterações ainda não guardadas?'))return;const d=getPlan(planStorage,b.dataset.load);$('saved-dialog').close();openSnapshot(d);toast('Plano aberto com os índices usados no salvamento.');}
+  if(b.dataset.delete&&confirm('Excluir este plano deste navegador?')){removePlan(planStorage,b.dataset.delete);loadSaved();}
  }catch(e){toast(e.message,true);}
 });
 $('open-import').addEventListener('click',()=>$('import-plan').click());
