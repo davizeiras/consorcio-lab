@@ -4,9 +4,9 @@ services:
     name: consorcio-lab
     runtime: node
     plan: free
-    buildCommand: npm test
+    buildCommand: npm ci --ignore-scripts && npm test
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeployTrigger: off
     envVars:
       - key: NODE_VERSION

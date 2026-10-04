@@ -18,7 +18,13 @@ if not exist "server.mjs" (
   pause
   exit /b 1
 )
-echo Iniciando o Consorcio Lab...
+call npm.cmd ci --ignore-scripts
+if errorlevel 1 (
+  echo Nao foi possivel instalar as dependencias. Confira a internet.
+  pause
+  exit /b 1
+)
+echo Iniciando o Iran Solutions...
 echo Abra no navegador o endereco que o servidor mostrar.
 echo Mantenha esta janela aberta enquanto usar o simulador.
 node --env-file-if-exists=.env server.mjs

@@ -1,4 +1,8 @@
-# Iran Solutions — simulador de consórcio, sem login
+# Controle de acesso em preparação · 2.4.0
+
+Foto de identificação, login por e-mail e senha e painel de aprovação/bloqueio preparados. A ativação depende de configurar o projeto de contas, o envio de e-mails e o administrador. Veja [ATIVAR-ACESSOS.md](docs/ATIVAR-ACESSOS.md). Enquanto AUTH_MODE=public, o comportamento sem login abaixo permanece vigente.
+
+## Simulador no modo público
 
 Abra o endereço e comece a simular. Esta versão não pede nome, e-mail, senha ou cadastro.
 
@@ -16,10 +20,11 @@ A versão 2.3.0 mantém os objetivos **Render** e **Vender**, com a identidade I
 Também pode abrir a pasta que contém `package.json` no VS Code e executar:
 
 ```powershell
+npm.cmd ci --ignore-scripts
 npm.cmd start
 ```
 
-Não precisa executar `npm install`. Se o terminal mostrar `ENOENT package.json`, ele está na pasta errada; use o iniciador acima ou abra a pasta correta no VS Code.
+Na versão 2.4.0, execute `npm ci --ignore-scripts` antes de iniciar. Se o terminal mostrar `ENOENT package.json`, ele está na pasta errada; use o iniciador acima ou abra a pasta correta no VS Code.
 
 ## O que o cliente vê
 
