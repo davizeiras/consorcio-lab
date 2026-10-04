@@ -1,5 +1,6 @@
 // Os planos ficam no navegador; o servidor não tem uma lista pública de simulações.
 import {validateConfig,validatePoints,simulate} from './engine.js';
+import {normalizeComparison} from './savings.js';
 export const STORAGE_KEY='consorcio-lab.planos.v1';
 export const MAX_PLANS=50;
 export const MAX_IMPORT_BYTES=2*1024*1024;
@@ -12,7 +13,7 @@ export function normalizeSnapshot(payload,{imported=false}={}){
  const index={variant:config.indexVariant,provenance,status:'snapshot',fetchedAt,latest,points,imported:imported||raw.imported===true};
  // Resultados de um arquivo nunca são aceitos como verdade: sempre recalculamos.
  simulate(config,index);
- return {config,index};
+ return {config,index,comparison:normalizeComparison(payload.comparison)};
 }
 export function parseImport(text){
  if(typeof text!=='string'||new TextEncoder().encode(text).length>MAX_IMPORT_BYTES)throw new Error('Use um arquivo JSON de até 2 MB.');

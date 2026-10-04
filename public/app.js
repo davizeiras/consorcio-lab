@@ -1,15 +1,17 @@
 import {DEFAULTS,simulate,validatePoints} from './engine.js';
 import {GOALS,duration,firstPayment,syncChoices,assetCopy,afterPayment,contemplationOptions,chartMonthAt,assertSupportedScenario} from './journey.js';
 import {savePlan,listPlans,getPlan,removePlan,parseImport,MAX_IMPORT_BYTES} from './storage.js';
+import {DEFAULT_SAVINGS_RATE,simulateSavings} from './savings.js';
 const UI_DEFAULTS={...DEFAULTS,name:''};
 const $=id=>document.getElementById(id),form=$('config-form');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
 const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2}).format(n);
 const pct=n=>new Intl.NumberFormat('pt-BR',{maximumFractionDigits:2}).format(n)+'%';
+const tone=n=>n===null||Math.abs(n)<0.005?'neutral':n>0?'positive':'negative';
 const compact=n=>new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:1}).format(n);
 const monthName=date=>new Date(date+'-01T12:00:00Z').toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
 const emptyIndex=()=>({points:[],provenance:'unavailable',status:'unavailable'});
-const state={config:{...UI_DEFAULTS},committed:{...UI_DEFAULTS},index:emptyIndex(),result:null,selected:DEFAULTS.horizon,page:0,valid:false,indexRequest:0,step:0,furthest:0,error:'',dirty:false,saving:false};
+const state={config:{...UI_DEFAULTS},committed:{...UI_DEFAULTS},index:emptyIndex(),result:null,selected:DEFAULTS.horizon,page:0,valid:false,indexRequest:0,step:0,furthest:0,error:'',dirty:false,saving:false,savingsRate:DEFAULT_SAVINGS_RATE,savingsResult:null,resultTab:'consortium'};
 let toastTimer,editTimer;
 const nullable=new Set(['insuranceMonthly']);
 const n=(key,label,unit='',min=0,max=100,step='any',placeholder='')=>`<label for="field-${key}">${label}${unit?`<span class="label-unit">${unit}</span>`:''}<input form="config-form" id="field-${key}" name="${key}" data-label="${label}" type="number" min="${min}" max="${max}" step="${step}" ${nullable.has(key)?'':'required'} placeholder="${placeholder}"></label>`;
@@ -150,8 +152,8 @@ function renderSelected(){
  $('jump-event').hidden=c.scenario==='hold';
  document.querySelectorAll('[data-jump]').forEach(b=>b.setAttribute('aria-pressed',String(jumpMonth(b.dataset.jump)===r.month)));
  $('asset-label').textContent=copy.label;$('metric-assets-note').textContent=copy.note;
- $('metric-assets').textContent=money(r.assets);$('metric-paid').textContent=money(r.totalPaid);$('metric-debt').textContent=money(r.debt);$('metric-result').textContent=money(r.result);$('metric-result').className=r.result>=0?'positive':'negative';
- $('metric-roi').textContent=r.roiPercent===null?'—':pct(r.roiPercent);$('metric-roi').className=r.roiPercent<0?'negative':'positive';
+ $('metric-assets').textContent=money(r.assets);$('metric-paid').textContent=money(r.totalPaid);$('metric-debt').textContent=money(r.debt);$('metric-result').textContent=money(r.result);$('metric-result').className=tone(r.result);
+ $('metric-roi').textContent=r.roiPercent===null?'—':pct(r.roiPercent);$('metric-roi').className=tone(r.roiPercent);
  $('roi-period').textContent=`Até o mês ${r.month}, sobre o total pago. Não anualizado.`;
  const totalBid=summary.ownBid+summary.embeddedBid;
  $('metric-bid-label').textContent=totalBid===0?'Sem lance':r.month<c.contemplationMonth?'Lance previsto na simulação':'Lance utilizado na simulação';
@@ -161,8 +163,42 @@ function renderSelected(){
  const uninsured=c.insuranceMonthly===null&&(c.insuranceBefore||r.month>=c.contemplationMonth)&&r.month<=c.term&&(!r.sold||r.month===c.saleMonth);
  const pairs=[['Resultado sobre o total pago',r.roiPercent===null?'—':pct(r.roiPercent)+' no período'],['Parcela neste mês',money(r.installment)],['Parte da parcela que abate o crédito',money(r.amortization)],['Administração neste mês',money(r.adminFee)],['Reserva neste mês',money(r.reserveFee)],['Seguro neste mês',uninsured?'Não informado':money(r.insurance)],['Reajuste do saldo neste mês',money(r.correction)],['Reajuste acumulado aplicado',pct(r.correctionPercent)],['Lance do seu bolso',money(r.bidCash)],['Lance retirado da carta',money(r.bidEmbedded)],['Desconto estimado sobre rendimentos',money(r.hypotheticalTax)],['Valor estimado menos o que falta pagar',money(r.netEquity)]];
  $('breakdown').innerHTML=pairs.map(([l,v])=>`<div><span>${l}</span><strong>${v}</strong></div>`).join('');$('event-details').hidden=true;
- if(summary.sale&&r.month>=summary.sale.month){const s=summary.sale;$('event-details').hidden=false;$('event-details').innerHTML=`Na venda simulada do mês <b>${s.month}</b>, você recebe <b>${money(s.net)}</b> líquidos.<br>Até a venda, já pagou ${money(s.paidUntilSale)}. Resultado naquele momento: <b>${money(s.resultAtSale)}</b>.<br>O comprador assume ${money(s.transferredDebt)} de saldo e taxas restantes.`;}
- if($('chart-details').open)renderChart();
+ if(summary.sale&&r.month>=summary.sale.month){const s=summary.sale;$('event-details').hidden=false;$('event-details').innerHTML=`<h3>Valores na venda · mês ${s.month}</h3><div class="sale-values"><div><span>Valor da carta antes da venda</span><strong id="sale-credit-value">${money(s.availableCredit)}</strong></div><span class="sale-arrow" aria-hidden="true">→</span><div><span>Você recebe na venda</span><strong id="sale-net-value">${money(s.net)}</strong><small>Líquido de custos e impostos informados.</small></div></div><p class="field-help">Crédito contratado: ${money(c.credit)}. O valor da carta considera o lance embutido e os rendimentos até a venda.</p><p class="field-help">Preço: ${pct(c.salePercent)} da carta${c.saleExtra?` + ${money(c.saleExtra)} de reembolso`:''}. Até a venda, você pagou ${money(s.paidUntilSale)}; resultado naquele momento: <b class="${tone(s.resultAtSale)}">${money(s.resultAtSale)}</b>. O comprador assume ${money(s.transferredDebt)} de saldo e taxas restantes.</p>`;}
+ if($('chart-details').open&&state.resultTab==='consortium')renderChart();
+ renderSavings();
+}
+function setResultTab(tab,focus=false){
+ state.resultTab=tab;
+ document.querySelectorAll('[data-result-tab]').forEach(button=>{const selected=button.dataset.resultTab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
+ $('consortium-panel').hidden=tab!=='consortium';$('consortium-payments').hidden=tab!=='consortium';$('savings-panel').hidden=tab!=='savings';
+ if(focus)$('tab-'+tab).focus();
+ if(tab==='consortium'&&state.result&&$('chart-details').open)renderChart();
+}
+function renderSavings(){
+ if(!state.result)return;
+ try{
+  state.savingsResult=simulateSavings(state.result.rows,state.savingsRate);
+  $('savings-error').hidden=true;$('savings-rate').removeAttribute('aria-invalid');$('savings-results').hidden=false;$('savings-monthly').hidden=false;
+  const r=state.result.rows[state.selected-1],s=state.savingsResult.rows[state.selected-1],c=state.result.config;
+  $('savings-period').textContent=`Após ${duration(r.month)} · mês ${r.month} · ${monthName(r.date)}`;
+  $('comparison-goal').textContent=`Consórcio · ${GOALS[c.scenario]}`;
+  const values=[['Total pago / depositado',r.totalPaid,s.totalDeposited],['Valor estimado',r.assets,s.balance],['Saldo a pagar',r.debt,0],['Lucro / prejuízo',r.result,s.profit]];
+  $('comparison-body').innerHTML=values.map(([label,a,b],i)=>`<tr${i===3?' class="comparison-profit"':''}><th scope="row">${label}</th><td${i===3?` class="${tone(a)}"`:''}>${money(a)}</td><td${i===3?` class="${tone(b)}"`:''}>${money(b)}</td></tr>`).join('')+`<tr class="comparison-roi"><th scope="row">ROI no período</th><td class="${tone(r.roiPercent)}">${r.roiPercent===null?'—':pct(r.roiPercent)}</td><td class="${tone(s.roiPercent)}">${s.roiPercent===null?'—':pct(s.roiPercent)}</td></tr>`;
+  const difference=r.result-s.profit;
+  $('comparison-difference').textContent=Math.abs(difference)<0.005?'As duas opções têm o mesmo resultado neste cenário.':`${difference>0?'Consórcio':'Poupança'}: ${money(Math.abs(difference))} a mais de resultado neste cenário.`;
+  $('comparison-note').textContent=`ROI acumulado sobre o total pago ou depositado, sem anualização. ${r.sold?'Na venda, o comprador assume as parcelas restantes. Depois dela, a poupança continua rendendo sem novos depósitos.':'No consórcio, o crédito continua vinculado à administradora; o resultado já desconta o saldo a pagar.'}`;
+ }catch(e){state.savingsResult=null;$('savings-error').textContent=e.message;$('savings-error').hidden=false;$('savings-rate').setAttribute('aria-invalid','true');$('savings-results').hidden=true;$('savings-monthly').hidden=true;}
+ renderSavingsTable();
+}
+function renderSavingsTable(){
+ if(!state.savingsResult)return;
+ const rows=state.savingsResult.rows.slice(state.page*12,state.page*12+12);
+ $('savings-monthly-body').innerHTML=rows.map(r=>`<tr class="${r.month===state.selected?'selected':''}"><td>${r.month}<small>${r.date}</small></td><td>${money(r.deposit)}</td><td>${money(r.totalDeposited)}</td><td class="${tone(r.interest)}">${money(r.interest)}</td><td>${money(r.balance)}</td><td class="${tone(r.profit)}">${money(r.profit)}</td></tr>`).join('');
+ const pages=Math.ceil(state.savingsResult.rows.length/12);$('savings-page-label').textContent=`Página ${state.page+1} de ${pages}`;$('savings-prev-page').disabled=state.page===0;$('savings-next-page').disabled=state.page>=pages-1;
+}
+function validComparisonForSaving(){
+ if(state.savingsResult)return true;
+ setResultTab('savings');$('savings-rate').focus();toast('Confira a taxa da poupança antes de guardar a simulação.',true);return false;
 }
 function jumpMonth(target){const c=state.result.config;return target==='start'?1:target==='end'?c.horizon:target==='event'?c.saleMonth:c.contemplationMonth;}
 let chartGeometry;
@@ -190,8 +226,9 @@ function inspectChart(event){
 }
 function renderTable(){
  if(!state.result)return;const rows=state.result.rows.slice(state.page*12,state.page*12+12);
- $('monthly-body').innerHTML=rows.map(r=>`<tr class="${r.month===state.selected?'selected':''}"><td>${r.month}<small>${r.date}</small></td><td>${money(r.installment)}</td><td>${money(r.totalPaid)}</td><td>${money(r.debt)}</td><td>${money(r.assets)}</td><td class="${r.result>=0?'positive':'negative'}">${money(r.result)}</td><td>${r.indexMonth?pct(r.indexPercent):'—'}<small class="origin ${r.indexSource.startsWith('Publicado')?'real':''}">${esc(r.indexSource)}</small></td></tr>`).join('');
+ $('monthly-body').innerHTML=rows.map(r=>`<tr class="${r.month===state.selected?'selected':''}"><td>${r.month}<small>${r.date}</small></td><td>${money(r.installment)}</td><td>${money(r.totalPaid)}</td><td>${money(r.debt)}</td><td>${money(r.assets)}</td><td class="${tone(r.result)}">${money(r.result)}</td><td>${r.indexMonth?pct(r.indexPercent):'—'}<small class="origin ${r.indexSource.startsWith('Publicado')?'real':''}">${esc(r.indexSource)}</small></td></tr>`).join('');
  const pages=Math.ceil(state.result.rows.length/12);$('page-label').textContent=`Página ${state.page+1} de ${pages}`;$('prev-page').disabled=state.page===0;$('next-page').disabled=state.page>=pages-1;
+ renderSavingsTable();
 }
 function renderIndex(){
  const d=state.index,status={loading:'Consultando o histórico…',updated:'Histórico atualizado',cached:'Histórico da última consulta',stale:'Consulta indisponível · histórico preservado',unavailable:'Consulta indisponível · usando estimativas',manual:'Histórico informado por você',snapshot:'Histórico da simulação salva'};
@@ -211,6 +248,7 @@ async function refreshIndex(quiet=false){
 function closeDetails(){document.querySelectorAll('#config-form details,#results-panel details').forEach(d=>d.open=false);}
 function newSimulation(){
  state.indexRequest++;clearTimeout(editTimer);state.index=emptyIndex();state.committed={...UI_DEFAULTS};setFields(UI_DEFAULTS);state.selected=DEFAULTS.horizon;state.page=0;state.furthest=0;state.dirty=false;
+ state.savingsRate=DEFAULT_SAVINGS_RATE;$('savings-rate').value=state.savingsRate;setResultTab('consortium');
  $('timing-note').hidden=true;$('manual-upload').value='';closeDetails();recalculate();renderIndex();showStep(0,false);$('save-status').textContent='Salve neste navegador ou baixe uma cópia.';
 }
 form.addEventListener('submit',e=>{e.preventDefault();if(state.step<3)navigate(state.step+1);});
@@ -232,6 +270,12 @@ document.addEventListener('change',e=>{
  if(el.name==='indexVariant'){state.indexRequest++;state.index={...emptyIndex(),status:el.value==='manual'?'manual':'unavailable'};$('manual-upload').value='';renderIndex();}
  recalculate();markDirty();if(el.name==='indexVariant')refreshIndex();
 });
+document.querySelectorAll('[data-result-tab]').forEach(button=>{
+ button.addEventListener('click',()=>setResultTab(button.dataset.resultTab));
+ button.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();setResultTab(event.key==='Home'?'consortium':event.key==='End'?'savings':state.resultTab==='consortium'?'savings':'consortium',true);});
+});
+$('savings-rate').addEventListener('input',e=>{state.savingsRate=e.target.value===''?null:Number(e.target.value);renderSavings();markDirty();});
+for(const id of ['savings-prev-page','savings-next-page'])$(id).addEventListener('click',()=>{if(!state.savingsResult)return;state.page=Math.max(0,Math.min(Math.ceil(state.savingsResult.rows.length/12)-1,state.page+(id==='savings-next-page'?1:-1)));renderTable();});
 $('timeline').addEventListener('input',e=>{state.selected=Number(e.target.value);state.page=Math.floor((state.selected-1)/12);renderSelected();renderTable();});
 document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{if(!state.result)return;state.selected=jumpMonth(b.dataset.jump);state.page=Math.floor((state.selected-1)/12);renderSelected();renderTable();}));
 $('chart-details').addEventListener('toggle',()=>{if($('chart-details').open&&state.result)renderChart();});
@@ -256,14 +300,14 @@ $('manual-upload').addEventListener('change',async e=>{
  }catch(e){toast(e.message,true);}
 });
 $('download-plan').addEventListener('click',()=>{
- clearTimeout(editTimer);recalculate();if(!state.result)return;
- download('meu-plano-consorcio.json','application/json',JSON.stringify({version:2,config:state.result.config,index:state.index},null,2));
+ clearTimeout(editTimer);recalculate();if(!state.result||!validComparisonForSaving())return;
+ download('meu-plano-consorcio.json','application/json',JSON.stringify({version:2,config:state.result.config,index:state.index,comparison:{monthlyRate:state.savingsRate}},null,2));
  toast('Arquivo preparado. Guarde-o para abrir em outro momento.');
 });
 $('save').addEventListener('click',()=>{
- clearTimeout(editTimer);recalculate();if(!state.valid)return;
+ clearTimeout(editTimer);recalculate();if(!state.valid||!validComparisonForSaving())return;
  try{
-  const d=savePlan(window.localStorage,{config:state.result.config,index:state.index});state.indexRequest++;state.index=d.index;$('refresh-index').disabled=false;state.dirty=false;recalculate();
+  const d=savePlan(window.localStorage,{config:state.result.config,index:state.index,comparison:{monthlyRate:state.savingsRate}});state.indexRequest++;state.index=d.index;$('refresh-index').disabled=false;state.dirty=false;recalculate();
   $('save-status').textContent='Guardado neste navegador. Encontre em “Planos guardados”.';toast('Plano guardado aqui.');
  }catch(e){toast(e.message,true);}
 });
@@ -273,6 +317,7 @@ function loadSaved(){
 function openSnapshot(d,{imported=false}={}){
  assertSupportedScenario(d.config.scenario);
  state.indexRequest++;clearTimeout(editTimer);state.index={...d.index,status:'snapshot'};setFields(d.config);state.committed={...state.config};state.selected=d.config.horizon;state.page=Math.floor((state.selected-1)/12);state.dirty=imported;
+ state.savingsRate=d.comparison.monthlyRate;$('savings-rate').value=state.savingsRate;setResultTab('consortium');
  $('timing-note').hidden=true;$('manual-upload').value='';closeDetails();recalculate();renderIndex();$('refresh-index').disabled=false;
  $('save-status').textContent=imported?'Arquivo aberto. Clique em “Guardar aqui” para salvá-lo neste navegador.':'Plano guardado aberto. Salvar de novo cria outra cópia.';
  if(state.valid)showStep(3);else{showStep(2);showError(state.error,engineErrorField(state.error));}
