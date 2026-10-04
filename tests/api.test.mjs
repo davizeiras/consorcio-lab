@@ -16,7 +16,7 @@ test('entrada direta, índice e cálculo sem login; dados antigos não são expo
  t.after(async()=>{child.kill();await new Promise(r=>{if(child.exitCode!==null)r();else child.once('exit',r)});await rm(dir,{recursive:true,force:true});});
  await new Promise((resolve,reject)=>{child.stdout.once('data',resolve);child.once('error',reject);child.once('exit',code=>reject(new Error(`Servidor saiu: ${code} ${stderr}`)));});
  const home=await fetch(origin),html=await home.text();assert.equal(home.status,200);assert.equal(home.headers.get('set-cookie'),null);assert.match(html,/<div id="app-view">/);assert.doesNotMatch(html,/auth-form|type="password"|type="email"/);
- for(const route of ['/app.js','/journey.js','/storage.js','/engine.js']){const r=await fetch(origin+route);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/javascript/);}
+ for(const route of ['/app.js','/journey.js','/storage.js','/savings.js','/engine.js']){const r=await fetch(origin+route);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/javascript/);}
  const index=await fetch(origin+'/api/indices?variant=manual');assert.equal(index.status,200);assert.deepEqual((await index.json()).points,[]);assert.equal(index.headers.get('set-cookie'),null);
  assert.equal((await fetch(origin+'/api/indices?variant=OUTRO')).status,400);
  const body=JSON.stringify({config:{...DEFAULTS,indexVariant:'manual',forecastAnnual:0,insuranceMonthly:0},index:{points:[]}});
