@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
     "dev": "node --env-file-if-exists=.env --watch server.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "pretest": "npm ci --ignore-scripts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2"
