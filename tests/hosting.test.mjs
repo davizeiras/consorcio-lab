@@ -16,7 +16,7 @@ test('produção inicia com endereço do Render e restringe a origem do cálculo
  const publicOrigin='https://consorcio-hosting-test.onrender.com';
  const child=spawn(process.execPath,['server.mjs'],{
   cwd:new URL('..',import.meta.url),
-  env:{...process.env,NODE_ENV:'production',PORT:String(port),PUBLIC_ORIGIN:'',HOST:'',RENDER_EXTERNAL_URL:publicOrigin,DATA_DIR:dir}
+  env:{...process.env,AUTH_MODE:'public',NODE_ENV:'production',PORT:String(port),PUBLIC_ORIGIN:'',HOST:'',RENDER_EXTERNAL_URL:publicOrigin,DATA_DIR:dir}
  });
  let stderr='';child.stderr.on('data',b=>{stderr+=b});
  t.after(async()=>{
