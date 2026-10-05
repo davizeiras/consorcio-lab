@@ -8,7 +8,7 @@ O site continua público até a configuração explícita. O e-mail do administr
 3. Manter confirmação de e-mail obrigatória. Configurar Site URL e redirect permitido `https://consorcio-lab.onrender.com/login`. Para clientes externos, configurar SMTP próprio antes de abrir cadastros: o envio padrão do Supabase é restrito. Testar entrega e confirmação reais.
 4. Criar a conta de Davi pela própria tela; ele escolhe a senha, sem enviá-la pelo chat. Conferir o e-mail confirmado no Auth e inserir apenas seu UUID em `iran_private.administrators`. Ninguém vira administrador por ser o primeiro cadastrado, por informar um e-mail na tela ou por editar metadados.
 5. Configurar no Render `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` (chave pública; não usar service_role). Configurar `AUTH_MODE=required`, `PUBLIC_ORIGIN=https://consorcio-lab.onrender.com` e `NODE_ENV=production`. Credenciais ausentes impedem a inicialização em modo obrigatório; não há retorno automático ao modo público.
-6. Atualizar build para `npm ci --ignore-scripts && npm test`, health check `/health`, executar deploy manual e conferir login, logout, contas pendentes, aprovação e bloqueio no site.
+6. Manter build `npm test` (pretest instala o lockfile com `npm ci --ignore-scripts`), health check `/health`, executar deploy manual e conferir login, logout, contas pendentes, aprovação e bloqueio no site.
 
 ## Comportamento
 
